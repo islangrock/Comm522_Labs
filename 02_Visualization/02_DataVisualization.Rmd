@@ -1,0 +1,211 @@
+---
+title: "02 Data Visualization"
+author: Isabelle Langrock - Comm 522 
+output: 
+  html_document:
+    code_folding: show
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+Written by: Isabelle Langrock 
+
+Comm 522: Introduction to Research Methods (Lab)
+
+*Last Updated: August 2021* 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = "hide", fig.width=8, fig.height=4)
+options(scipen = 0, digits = 3)  # controls base R output
+```
+
+
+# Objectives & Materials 
+
+*This lab provides an introduction to data visualization with ggplot* 
+
+## Lab Objectives
+
+This lab reviews some of the basics of visualizing data in R. You will work with ggplot to great several different kinds of figures
+
+Additionally, we will review: 
+
+  - basics of data manipulation: gather(), spread(), mutate(), summarize(), filter(), rename()
+  - basics of plotting with ggplot 
+  
+
+##Required packages 
+
+Please load the tidyverse and GGally packages. Remember, you might need to also insall GGally if you haven't already. 
+
+```{r}
+library(tidyverse)
+library(GGally)
+```
+
+##Data 
+
+Download the data files from canvas. These are slighly modified data sets from this Five Thirty Eight article: https://projects.fivethirtyeight.com/next-bechdel/.  You can also find out more about the Bechdel test here: https://bechdeltest.com/ (including results for more recent movies!)
+
+You need the following data files: 
+
+**all_tests** : The top 50 movies in 2016 with a column for each proposed "next" bechdel test (a simple measure of gender imbalance in films). 0 = failed the test. 1= passed the test. You can read about each test in the Five Thirty Eight article linked above. 
+
+**cast:** The number of roles, per film, played by men, women, and other (either gender unknown or person is outside the gender binary)
+
+To read the code as written set your working directory to be whatever folder holds the next-bechdel folder you download from canvas. We recommend starting a R-Project for this class (do so via File>New Project or in the top right corner).Then just drag the next-bechdel folder into the folder the R-Project is in. You can also set your working directory by going to Session > Set Working Directory > Choose Directory. 
+
+```{r}
+all_tests<-read.csv("~/Desktop/Methods_Rlabs/data/alltests.csv")
+cast<-read.csv("~/Desktop/Methods_Rlabs/data/cast.csv")
+
+head(all_tests)
+head(cast)
+```
+
+## Additional Resources 
+- Chapter 3 of R for Data Science (https://r4ds.had.co.nz/data-visualisation.html) covers much of the same material (and more!)
+- Helpful "Cheatsheets"
+    - Ggplot2: https://www.maths.usyd.edu.au/u/UG/SM/STAT3022/r/current/Misc/data-visualization-2.1.pdf
+    - Rmarkdown: https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown.pdf
+    - dplyr: https://raw.githubusercontent.com/rstudio/cheatsheets/master/data-transformation.pdf
+    - Rstudio: https://raw.githubusercontent.com/rstudio/cheatsheets/master/rstudio-ide.pdf
+    
+# Data Visualization Types 
+
+## Scatterplot 
+
+Our first task will be to look at the relationship between two variables. Here we will look at the proportion of women acting in a film and the the number of tests the film passes. 
+
+### Data Preparation 
+
+Our variables of interest are currently in two different dataframes so we'll need to make a new dataframe that we can then plot. We also need to calculate the number of passed tests from all_tests and the proportion of women from the counts provided. 
+
+```{r}
+# make new variable for passed tests 
+# remember mutate allows us to make a new variable 
+all_tests <- all_tests %>%
+  mutate(total_pass= rowSums(.[2:14])) # call the rows we want to sum in the []s. rowSums sums across rows...
+
+# isolate number of women in the cast for each movie & make proportion of total roles 
+
+cast_w<- cast %>%
+  group_by(MOVIE)%>% 
+  filter(gender=="Women") %>%
+  mutate(w_prop=gender_count/roles) %>%
+  rename(movie="MOVIE") # rename movie so that the two datasets match
+
+
+cast_w
+# join together our two new datasets 
+
+pass_women_count <- left_join(all_tests, cast_w, by="movie")
+pass_women_count
+```
+
+
+Now we have dataset that we can use to make a scatterplot. 
+
+### Plotting with ggplot 
+ggplot works with the following structure: 
+
+  ggplot(data, aes(x=variable on x axis, y= variable on y axis))+
+    geom_XXXX() 
+    
+    
+We'll see a number of different geoms throughout the lab, but there are many more!
+
+You can also call the aes in either the top ggplot() or within the geom(). AS well as adding many other features (like color, fill, shape, etc). 
+    
+
+```{r}
+
+# most basic graph
+ggplot(pass_women_count, aes(x=w_prop, y=total_pass))+
+  geom_point()
+
+## making a nicer graph by including color and labels
+ggplot(pass_women_count, aes())+
+  geom_point(aes(x=w_prop, y=total_pass, color=as.character(bechdel)))+
+  scale_color_manual(values=c("black", "red"),
+                   labels=c("failed", "passed"),
+                   name="Bechdel Test")+
+  theme_minimal()+
+  labs(y="total tests passed", x="proportion of women actors")
+
+```
+
+## Histogram 
+
+Histograms are great ways to see how a variable is distributed among your data. We can use geom_histogram() with ggplot to make histograms. Here we make one to see how the number of passed tests falls across our groups of films. Try changing the value of bins. What happens? 
+
+```{r}
+ggplot(all_tests, aes(x=total_pass))+
+  geom_histogram(bins=5, fill="green")
+```
+
+## Correlation Plot 
+
+Correlation plots let us visualize the relationship among several different variables. Here we'll see how the number of men, number of women, and number of passed tests are correlated. For this graph, we'll use ggpairs(), but first this requires a little more preparation. 
+
+```{r}
+
+counts<- cast %>%
+  group_by(MOVIE) %>%
+  spread(gender, gender_count)%>% # spread is extremely handy! It takes what's in rows and makes them into columns
+  rename(movie="MOVIE") 
+
+# to see what spread does compare counts and cast 
+counts
+cast 
+
+passed_tests <- all_tests %>%
+  select(movie, total_pass) # select lets us choose the variables (columns) we want 
+
+corr<- left_join(counts, passed_tests, by="movie")%>%
+  select(roles, Men, Women, total_pass)
+
+corr<-corr[2:5] # this is another way of choosing the columns that we want, by # rather than name. 
+
+ggpairs(corr)
+```
+
+
+## Porportional Bar Chart  
+
+Finally, we'll look at proportional bar charts to depict the proportion of films that failed and passed each test. This uses the geom_bar() function with ggplot, but we have to be careful to set stat="identity". Spend some time looking up other types of bar charts that we can make with geom_bar. In your own words, what does stat do? 
+
+
+```{r}
+# want to condense our all_tests data set so that test names are one column and pass/fail is another. 
+# we can do this easily using the gather function
+# gather is basically the opposite of spread! It compresses columns into rows and makes our df much longer. 
+
+all_tests_long <- all_tests %>%
+  gather(test, score, 2:14) %>% 
+  mutate(pf=if_else(score==0, "fail", "pass"),total=1)
+
+# now we'll make the plot without f
+
+ggplot(all_tests_long, aes(y=reorder(test, score), x=total, fill=pf))+
+  geom_bar(stat="identity", position="stack")
+
+# reorder is a function that allows us to make neat graphs. What happens if we just set y=test? 
+
+```
+
+# On Your Own 
+
+1. Make a bar chart that has a list of each film along the y-axis and then a stacked bar of the number of tests it fails and the number it passes. The code will look very similar to the bar chart above! Also, change the y-axis, x-axis, legend label with labs and add a title to the plot using ggtitle. Finally change the color scheme using scale fill manual. 
+
+
+
+2. Provide a correlation graph that looks at (1) the number of roles per film, (2) the number of women in a film, (3) the number of men in a film and (4) if it passes all the tests that are only concerned with what happens on camera (i.e. remove the uphold, rees.davies, and white tests from all_tests$total_pass. These are tests that concern the number of women crew & production members ) 
+
+
+

@@ -1,0 +1,148 @@
+MOVIE,roles,gender,gender_count
+10 Cloverfield Lane,10,Men,5
+10 Cloverfield Lane,10,Other,2
+10 Cloverfield Lane,10,Women,3
+Alice Through the Looking Glass,23,Men,11
+Alice Through the Looking Glass,23,Other,3
+Alice Through the Looking Glass,23,Women,9
+Arrival,60,Men,30
+Arrival,60,Other,9
+Arrival,60,Women,21
+Bad Moms,16,Men,4
+Bad Moms,16,Other,2
+Bad Moms,16,Women,10
+Batman v Superman: Dawn of Justice,122,Men,78
+Batman v Superman: Dawn of Justice,122,Other,8
+Batman v Superman: Dawn of Justice,122,Women,36
+Captain America: Civil War,26,Men,15
+Captain America: Civil War,26,Other,5
+Captain America: Civil War,26,Women,6
+Central Intelligence,25,Men,17
+Central Intelligence,25,Other,4
+Central Intelligence,25,Women,4
+Deadpool,34,Men,18
+Deadpool,34,Other,5
+Deadpool,34,Women,11
+Doctor Strange,29,Men,16
+Doctor Strange,29,Other,5
+Doctor Strange,29,Women,8
+Don’t Breathe,10,Men,5
+Don’t Breathe,10,Women,5
+Fantastic Beasts and Where to Find Them,61,Men,40
+Fantastic Beasts and Where to Find Them,61,Other,5
+Fantastic Beasts and Where to Find Them,61,Women,16
+Finding Dory,28,Men,17
+Finding Dory,28,Other,3
+Finding Dory,28,Women,8
+Ghostbusters,54,Men,30
+Ghostbusters,54,Other,8
+Ghostbusters,54,Women,16
+Hacksaw Ridge,90,Men,76
+Hacksaw Ridge,90,Other,9
+Hacksaw Ridge,90,Women,5
+Hidden Figures,96,Men,55
+Hidden Figures,96,Other,9
+Hidden Figures,96,Women,32
+Ice Age: Collision Course,18,Men,11
+Ice Age: Collision Course,18,Other,1
+Ice Age: Collision Course,18,Women,6
+Independence Day: Resurgence,28,Men,17
+Independence Day: Resurgence,28,Other,3
+Independence Day: Resurgence,28,Women,8
+Jason Bourne,43,Men,27
+Jason Bourne,43,Other,10
+Jason Bourne,43,Women,6
+Kung Fu Panda 3,36,Men,20
+Kung Fu Panda 3,36,Other,7
+Kung Fu Panda 3,36,Women,9
+La La Land,49,Men,24
+La La Land,49,Other,5
+La La Land,49,Women,20
+Lights Out,14,Men,3
+Lights Out,14,Other,1
+Lights Out,14,Women,10
+Miss Peregrine’s Home for Peculiar Children,53,Men,32
+Miss Peregrine’s Home for Peculiar Children,53,Other,5
+Miss Peregrine’s Home for Peculiar Children,53,Women,16
+Moana,7,Men,4
+Moana,7,Women,3
+Now You See Me 2,48,Men,29
+Now You See Me 2,48,Other,7
+Now You See Me 2,48,Women,12
+Passengers,27,Men,16
+Passengers,27,Women,11
+Pete’s Dragon,41,Men,28
+Pete’s Dragon,41,Other,2
+Pete’s Dragon,41,Women,11
+Ride Along 2,50,Men,30
+Ride Along 2,50,Other,5
+Ride Along 2,50,Women,15
+Rogue One: A Star Wars Story,33,Men,20
+Rogue One: A Star Wars Story,33,Other,7
+Rogue One: A Star Wars Story,33,Women,6
+Sausage Party,33,Men,24
+Sausage Party,33,Other,1
+Sausage Party,33,Women,8
+Sing,55,Men,29
+Sing,55,Other,10
+Sing,55,Women,16
+Star Trek Beyond,23,Men,13
+Star Trek Beyond,23,Other,4
+Star Trek Beyond,23,Women,6
+Storks,25,Men,15
+Storks,25,Other,3
+Storks,25,Women,7
+Suicide Squad,54,Men,35
+Suicide Squad,54,Other,9
+Suicide Squad,54,Women,10
+Sully,61,Men,34
+Sully,61,Other,12
+Sully,61,Women,15
+Teenage Mutant Ninja Turtles: Out of the Shadows,23,Men,16
+Teenage Mutant Ninja Turtles: Out of the Shadows,23,Other,2
+Teenage Mutant Ninja Turtles: Out of the Shadows,23,Women,5
+The Accountant,58,Men,37
+The Accountant,58,Other,7
+The Accountant,58,Women,14
+The Angry Birds Movie,47,Men,26
+The Angry Birds Movie,47,Other,4
+The Angry Birds Movie,47,Women,17
+The Boss,37,Men,13
+The Boss,37,Other,6
+The Boss,37,Women,18
+The Conjuring 2: The Enfield Poltergeist,32,Men,14
+The Conjuring 2: The Enfield Poltergeist,32,Other,3
+The Conjuring 2: The Enfield Poltergeist,32,Women,15
+The Divergent Series: Allegiant,91,Men,47
+The Divergent Series: Allegiant,91,Other,8
+The Divergent Series: Allegiant,91,Women,36
+The Girl on the Train,20,Men,11
+The Girl on the Train,20,Other,2
+The Girl on the Train,20,Women,7
+The Jungle Book,11,Men,8
+The Jungle Book,11,Other,1
+The Jungle Book,11,Women,2
+The Legend of Tarzan,58,Men,43
+The Legend of Tarzan,58,Other,5
+The Legend of Tarzan,58,Women,10
+The Magnificent Seven,48,Men,40
+The Magnificent Seven,48,Other,5
+The Magnificent Seven,48,Women,3
+The Purge: Election Year,41,Men,26
+The Purge: Election Year,41,Other,4
+The Purge: Election Year,41,Women,11
+The Secret Life of Pets,31,Men,15
+The Secret Life of Pets,31,Other,10
+The Secret Life of Pets,31,Women,6
+Trolls,32,Men,14
+Trolls,32,Other,3
+Trolls,32,Women,15
+Tyler Perry’s Boo! A Madea Halloween,42,Men,32
+Tyler Perry’s Boo! A Madea Halloween,42,Other,2
+Tyler Perry’s Boo! A Madea Halloween,42,Women,8
+X-Men: Apocalypse,90,Men,61
+X-Men: Apocalypse,90,Other,11
+X-Men: Apocalypse,90,Women,18
+Zootopia,32,Men,16
+Zootopia,32,Other,6
+Zootopia,32,Women,10

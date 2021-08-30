@@ -1,0 +1,385 @@
+---
+title: "06 Analyzing Text"
+author: 
+output: 
+  html_document:
+    code_folding: show
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+Written by: Isabelle Langrock 
+
+Comm 522: Introduction to Research Methods (Lab)
+
+*Last Updated: August 2021* 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = "hide", fig.width=8, fig.height=4)
+options(scipen = 0, digits = 3)  # controls base R output
+```
+
+# Objectives & Materials 
+
+*This lab provides an introduction to text analysis techniques* 
+
+## Lab Objectives
+
+This week's lab we will review some tools for analyzing text data.
+This lab will cover: 
+
+  - Tidy Text Format 
+  - Sentiment Analysis 
+  - Word Frequency Analysis 
+  - Review of ggplot & data visualization techniques 
+  
+These techniques are useful for analyzing large amounts of texts and for identifying trends and patterns in texts. You might consider using some of these techniques to analyze any open ended question responses for your final project.
+
+
+## Data 
+The data for this lab are the caption of all the 2019 Instagram posts from Joe Biden and Kamala Harris. This was collected from the Instagram API for a project I'm working on about self-representation and the democratic primary. You can find the csv file on canvas. Some other places to look for text data include this R package for the Google Books Ngram View (https://github.com/seancarmody/ngramr) and Twitter Data (rtweet package guide: https://mkearney.github.io/nicar_tworkshop/#1). 
+
+
+## Additional Resources 
+
+This week reviews material from the book, *Text Mining With R: A Tidy Approach* by Julia Silge and David Robinson (See more here: https://www.tidytextmining.com/index.html). If this week is interesting to you, I encourage you to check out the chapters on Topic Modeling and n-grams which build on the topics covered in the lab. 
+
+# Introduction to Tidy Text 
+
+For this lab, we'll use the tidytext package. 
+
+```{r}
+library(tidyverse)
+library(tidytext)
+
+captions <- read.csv("data/pres_captions.csv")
+summary(captions)
+head(captions)
+
+table(captions$username)
+```
+
+## Tidy Text Data Formats 
+
+The first step of working with text data is to put it in a usable format, which is called tidy text. 
+
+```{r}
+
+# Step by Step 
+
+#  1st, we unnest the caption (variable name = description) using the unnest_tokens function applied to each word, with token = "tweets". (This basically preserves hashtags and @s as words already so we don't have to do that work!)
+
+tidy_captions_step1 <- captions %>%
+  unnest_tokens(word, description, token="tweets")
+
+head(tidy_captions_step1, n=20)
+
+# 2nd, we filter out stop words (things like the, in, of, etc )
+tidy_captions_step2 <- tidy_captions_step1 %>%
+  filter(!word %in% stop_words$word,   # identifies if it's a "stop" word based on given library 
+         !word %in% str_remove_all(stop_words$word, "'"), # removes ' 
+         str_detect(word, "[a-z]")) # gets rids of numbers, other things that aren't letters. 
+
+head(tidy_captions_step2, n=20)
+
+# Now we have one word per row, but maybe we want to count those words and group by person 
+tidy_captions_step3 <- tidy_captions_step2 %>%
+  group_by(username) %>%
+  count(word) %>%
+  arrange(desc(n))
+
+head(tidy_captions_step3, n=20)
+
+```
+
+Alternatively, you can do all the steps at once by piping (%>%) everything together 
+```{r}
+tidy_captions<- captions %>%
+  unnest_tokens(word, description, token="tweets") %>%
+  filter(!word %in% stop_words$word, 
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word,"[a-z]"))%>%
+  group_by(username)%>%
+  count(word) %>%   
+  arrange(desc(n)) 
+
+head(tidy_captions, n=20)  
+```
+
+
+# Frequency Analysis 
+
+Joe Biden and Kamala Harris are using their instagram accounts as a form of campaiging. We can think of the captions as describing what's important to their campaigns, and then the frequency of a word will be related to it's importance. Could this tell us about the policy or ideas that they agree and differ on? 
+
+We can use a frequency analysis of the number of times each uses a word, relative to all the words they use, to analyze and visualize their relationship. 
+
+First, we need to do a bit more work to properly format our data: (1) create a frequency variable so we can compare the two, (2) spread the data so it's in tidy format (one word per row). 
+
+```{r}
+# Step 1 - Frequency Variable 
+freq <- tidy_captions %>%
+  group_by(username)%>%
+  mutate(total=n(), freq=n/total)
+
+head(freq)   # People is 4% of the (not stop) words Harris used in her Insta Captions. 
+
+
+# Step 2 - Spread 
+freq <- freq %>%
+  select(username, word, freq) %>%
+  spread(username, freq) %>%
+  arrange(desc(joebiden), kamalaharris)
+
+head(freq)
+```
+
+Now our data is ready to plot! 
+
+```{r}
+ggplot(freq, aes(x=joebiden, y=kamalaharris))+
+  geom_jitter(alpha=0.1, size=2)+
+  geom_text(aes(label=word), check_overlap=TRUE, vjust=1.5)+
+  geom_abline(color="blue")
+  
+# Note the dark mass in the bottom left -- there's a lot of words that are used less frequently by both. 
+# In order to better see those, we can log transform our axes using the scales package 
+
+library(scales)
+
+ggplot(freq, aes(x=joebiden, y=kamalaharris))+
+  geom_jitter(alpha=0.1, size=2)+
+  geom_text(aes(label=word), check_overlap=TRUE, vjust=1.5)+
+  scale_x_log10(labels=percent_format())+
+  scale_y_log10(labels=percent_format())+
+  geom_abline(color="blue")
+```
+
+## The log odds ratio 
+ 
+The graph above plots the frequencies of word use, but now we want to consider what words are more likely to be a Biden post or a Harris post. We'll use the log odds ratio to examine and plot this. The log odds ratio = $ln(\frac{\frac{n+1}{total+1}_B}{\frac{n+1}{total+1}_H})$ 
+ 
+ 
+Lets only look at words used more than 5 times by either candidate. 
+ 
+ 
+```{r}
+ratios <- tidy_captions %>%
+  group_by(word) %>%
+  filter(sum(n)>=10) %>%
+  ungroup() %>%
+  spread(username, n, fill=0) %>%    # use fill = 0 to write 0 instead of NA 
+  mutate_if(is.numeric, list(~(.+1)/ (sum(.)+1))) %>%   # mutate_if mutates all columns if it satisfies the initial condidtion (is.numeric), list(~(.+1)/ (sum(.)+1))) is running the inside of the log odds ratio (n+1/total+1). 
+  mutate(logratio=log(joebiden/kamalaharris)) %>%
+  arrange(desc(logratio))
+
+head(ratios)
+
+```
+
+We can use the log ratios to look at (1) what both post about fairly equally and (2) the words most likely to be from Biden than Harris and vice versa. 
+ 
+ 
+```{r}
+# Shared Words: 
+
+ratios %>% 
+  arrange(abs(logratio))  # Arranges by absolute value of log ratio, from 0 (0=same rate)
+
+# different words -- Top 20 most distinctive 
+ratios %>%
+  group_by(logratio<0) %>%   # Harris top are negative, Biden top are positive (we don't have usernames as variable anymore so we have to section another way)
+  top_n(15, abs(logratio))%>% # take the top 20 of both the positive (Biden) and negative (Harris) groups 
+  ungroup()%>% 
+  mutate(word=reorder(word, logratio)) %>%  # reorder our words by log_ratio (so they will plot nicely)
+  ggplot(aes(y=word, x=logratio, fill=logratio<0)) + # call the ggplot and use the same grouping technique from above for fill 
+  geom_col()+ 
+  scale_fill_manual(values=c("#3498db", "#7f7c98"), labels=c("Joe Biden", "Kamala Harris"))+
+  xlab("log odds ratio (Biden/Harris")
+  
+
+```
+
+Please note the strong association between Biden and "ice" and "cream"! 
+ 
+## A Tangent: Wordclouds 
+
+Wordclouds can be incredibly effective visualizations when working with text. They can also be incredibly ineffective and are often overused. So, use with care! 
+
+There's a ggworldcloud package that allows you to make word clouds using the grammar and logic off ggplot. Word clouds are often most effective for visualizing frequencies. 
+
+```{r}
+library(ggwordcloud)
+
+cloud_words <- sample_n(tidy_captions, 20)
+cloud_words
+
+
+ggplot(cloud_words, aes(label=word, size=(n), color=username))+
+  geom_text_wordcloud()+
+  scale_size_area(max_size = 15) +
+  scale_color_manual(values=c("dark green", "purple"), labels=c("Biden", "Harris"))+
+  theme_minimal()
+  
+```
+
+
+# Sentiment Analysis 
+
+We can also analyze text for it's sentiment, which requires assigning values to each word based on what sentiment they express (positive or negative; happy, sad, or angry; etc). There are several lexicons available to use that have already done such sorting/assigning for us. Of course you might want to look into lexicons that are more specific for certain domains or types of texts, or that identify key sentiments. You might use more than one lexicon to ensure consistency of patterns. It's also possible to build your own (or validate one) by assigning words yourself or crowdsourcing the task. What lexicon you choose should be motivated by your research questions and carefully chosen! 
+
+We'll use the bing lexicon where words are categorized in a binary positive - negative. 
+
+```{r}
+# you might need to install a necessary package and agree to download when using
+
+bing<-get_sentiments("bing")
+bing
+
+# now we join this with our tidy_captions dataframe 
+
+tidy_captions_sent <- left_join(tidy_captions, bing, by="word")
+
+head(tidy_captions_sent)
+
+# let's filter out all the words that were unassigned 
+
+words_sent<-tidy_captions_sent %>%
+  filter(!sentiment=="NA")
+
+# we have 991 words with an assigned sentiment 
+
+words_sent
+
+```
+
+
+Are Biden and Harris mostly positive or negative with their instagram captions? 
+
+```{r}
+words_sent%>%
+  count(sentiment)%>%
+  mutate(total=sum(n), freq =n/total)
+```
+
+What are the most common words for each sentiment for both Biden and Harris?
+
+```{r}
+words_sent%>%
+  group_by(username, sentiment) %>%
+  mutate(total=sum(n), freq=n/total) %>%
+  top_n(15, freq)%>%
+  ungroup() %>%
+  mutate(word=reorder(word, freq)) %>%
+  ggplot(aes(y=word, x=freq, fill=sentiment))+
+  geom_col()+
+  facet_wrap(~username, scales="free_y")+
+  scale_fill_manual(values=c("#8e4b69","#ffbbd9"))
+```
+
+We can go look for sentiment patterns over time, or maybe see if words of shared sentiments cluter over time. Here's how I would visualize sentiment change over time: 
+
+```{r}
+tidy_captions_step2 %>%
+  inner_join(bing) %>%
+  filter(!sentiment=="NA", !pubyear=="2020") %>%
+  group_by(username, pubmonth)%>%
+  count(sentiment) %>%
+  mutate(total=sum(n), freq=n/total)%>%
+  ggplot(aes(x=pubmonth, y=freq, color=sentiment))+
+  geom_line(size=3)+
+  facet_wrap(~username, nrow=2)+
+  scale_color_manual(values=c("#8e4b69","#ffbbd9"))+
+  scale_x_continuous(breaks=c(1:12))+
+  ylab("frequency of sentiment")+
+  xlab("Month of post - 2019")+
+  ggtitle("Sentiment Trends over time for Biden and Harris Instagram posts ")+
+  theme_light()
+```
+
+# N-grams 
+
+So far we've looked at singular words, but often we might be interested in the relationship between words. We can easily use the same unnest_tokens function to identiy n-grams or sets of n numbers of consecutive words. Here's an example to identify bi-grams (2 consecutive word pairs)
+
+
+```{r}
+caption_bigrams <- captions %>%
+  unnest_tokens(bigram, description, token="ngrams", n=2)
+
+head(caption_bigrams)
+
+# let's see what are the most common 
+count<-caption_bigrams %>%
+  count(bigram, sort=TRUE)
+
+head(count, 20)
+
+# lots of stop words are included which aren't that interesting for our analysis, we can remove them by separating and filtering the bigrams: 
+
+# first, separate
+bigrams_sep <- caption_bigrams %>%
+  separate(bigram, c("w1", "w2"), sep=" ")
+
+# second, filter (this should look familiar)
+
+filtered_bigrams <- bigrams_sep %>%
+  filter(!w1 %in% stop_words$word) %>%
+  filter(!w2 %in% stop_words$word)
+  
+# count the filtered bigrams  
+
+count_bigrams <- filtered_bigrams %>%
+  count(w1, w2, sort=TRUE)
+count_bigrams
+
+# we can also unite them back together and then proceed to analyze as we would with the singular words
+bigrams <- filtered_bigrams %>%
+  unite(bigram, w1, w2, sep= " ")
+
+count2<-bigrams %>%
+  count(bigram, sort=TRUE)
+
+head(count2, n=20)
+```
+
+
+## On your own: 
+
+1) What words get the most likes for both Biden and Harris? Identity and visualize the top 10 re-occuring words that get the highest average number of likes for both Biden and Harris. 
+
+TIP: Make a dataframe that includes the like count for each post associated with each instance of the word, and filter out any words that only appear once. Next, group by username and word and average the likecount to get an average like for each word -- instead of n per word you should have a variable like ave_like and each word-username combo is one line. Identify the top 10 most liked words for both Biden and Harris and use geom_col to plot them (you'll also want to use facet_wrap). 
+TIP 2: Review Ch. 7.5 of the Tidy Text Mining Book  (https://www.tidytextmining.com/twitter.html) for an example of this applied to Twitter Data. 
+
+
+2) annotate each line of the script to make the last plot (change in sentiment over time). If you need help, try running it line by line. 
+```{r}
+tidy_captions_step2 %>% # annotate here
+  inner_join(bing) %>% # what does this line 
+  filter(!sentiment=="NA", !pubyear=="2020") %>%
+  group_by(username, pubmonth)%>%
+  count(sentiment) %>%
+  mutate(total=sum(n), freq=n/total)%>%
+  ggplot(aes(x=pubmonth, y=freq, color=sentiment))+
+  geom_line(size=3)+
+  facet_wrap(~username, nrow=2)+
+  scale_color_manual(values=c("#8e4b69","#ffbbd9"))+
+  scale_x_continuous(breaks=c(1:12))+
+  ylab("frequency of sentiment")+
+  xlab("Month of post - 2019")+
+  ggtitle("Sentiment Trends over time for Biden and Harris Instagram posts ")+
+  theme_light()
+```
+
+
+
+
+
+
+
+
+
+
