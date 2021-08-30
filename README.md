@@ -3,6 +3,7 @@
 Comm 522: Introduction to Communication Research (Fall 2020)
 
 Instructor: Yph Lelkes
+
 TA: Isabelle Langrock
 
 Course Description: 
